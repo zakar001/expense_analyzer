@@ -4,80 +4,68 @@ A simple command-line tool written in Go to track and analyze personal expenses.
 
 ### Features
 
-- Add expenses with amount, category, and description
-- List all recorded expenses
-- Generate summary reports
-- Generate category breakdown reports
+- Add expenses with category, amount, and description
+- Generate detailed expense reports (all expenses or filtered by category)
+- View spending summary with category breakdown and percentages
+- Automatic date tracking
 
-### Installation
+### How to Use
 
-1. Ensure you have Go installed (version 1.21 or later)
-2. Clone or download the files to a directory
-3. Build the tool:
+1. **Build the tool:**
+   ```bash
+   go build -o expense-analyzer
+   ```
 
-```bash
-go build -o expense main.go expense.go
-```
+2. **Add an expense:**
+   ```bash
+   ./expense-analyzer add <category> <amount> <description>
+   ```
+   Example:
+   ```bash
+   ./expense-analyzer add food 25.50 "Lunch at restaurant"
+   ./expense-analyzer add transport 15.00 "Bus fare"
+   ./expense-analyzer add entertainment 45.00 "Movie tickets"
+   ```
 
-### Usage
+3. **Generate a report:**
+   ```bash
+   # All expenses
+   ./expense-analyzer report
+   
+   # Expenses for a specific category
+   ./expense-analyzer report food
+   ```
 
-The tool provides the following commands:
+4. **View spending summary:**
+   ```bash
+   ./expense-analyzer summary
+   ```
 
-#### Add an Expense
-```bash
-./expense add <amount> <category> <description>
-```
-Example:
-```bash
-./expense add 25.50 food "Lunch at restaurant"
-./expense add 45.00 transportation "Bus pass"
-```
-
-#### List All Expenses
-```bash
-./expense list
-```
-
-#### Generate Summary Report
-```bash
-./expense report
-```
-
-#### Generate Category Breakdown Report
-```bash
-./expense report category
-```
-
-### Example Session
+### Example Usage Session
 
 ```bash
 # Add some expenses
-./expense add 15.99 food "Coffee and sandwich"
-./expense add 45.00 transportation "Monthly bus pass"
-./expense add 8.50 food "Snacks"
-./expense add 29.99 entertainment "Movie ticket"
-
-# List all expenses
-./expense list
+./expense-analyzer add food 25.50 "Lunch"
+./expense-analyzer add transport 15.00 "Bus"
+./expense-analyzer add food 8.75 "Coffee"
+./expense-analyzer add entertainment 45.00 "Movie"
 
 # Generate reports
-./expense report
-./expense report category
+./expense-analyzer report
+./expense-analyzer report food
+./expense-analyzer summary
 ```
+
+### Categories
+
+You can use any category names you prefer. Common examples:
+- `food`, `transport`, `entertainment`, `utilities`, `shopping`, `health`
 
 ### Notes
 
 - Expenses are stored in memory and will be lost when the program exits
-- For persistent storage, you would need to add file-based or database storage
-- Amounts should be provided as numbers (e.g., "25.50" not "$25.50")
-- Categories are case-sensitive
+- For persistent storage, you would need to add file/database integration
+- All amounts should be positive numbers
+- Dates are automatically set to the current date/time when adding expenses
 
-### Future Enhancements
-
-- Add persistent storage (JSON file, database)
-- Add date filtering for reports
-- Add export to CSV functionality
-- Add budget tracking and alerts
-- Add monthly/yearly reporting
-
-This tool provides a solid foundation for personal expense tracking with clean, modular Go code that's easy to extend.
+This tool provides a solid foundation that can be extended with features like monthly reports, expense editing, data persistence, or graphical reports.
