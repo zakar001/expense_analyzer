@@ -15,10 +15,10 @@ func main() {
 	}
 
 	command := os.Args[1]
-	
+
 	switch command {
 	case "add":
-		if len(os.Args) != 5 {
+		if len(os.Args) < 5 {
 			fmt.Println("Usage: expense-analyzer add <amount> <category> <description>")
 			return
 		}
@@ -28,7 +28,11 @@ func main() {
 		expenseManager.AddExpense(amount, category, description)
 		
 	case "report":
-		expenseManager.GenerateReport()
+		if len(os.Args) > 2 && os.Args[2] == "detailed" {
+			expenseManager.GenerateDetailedReport()
+		} else {
+			expenseManager.GenerateSummaryReport()
+		}
 		
 	case "summary":
 		expenseManager.ShowSummary()
