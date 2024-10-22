@@ -2,7 +2,8 @@ package main
 
 import (
 	"fmt"
-	"sort"
+	"strconv"
+	"strings"
 )
 
 type ExpenseManager struct {
@@ -17,47 +18,66 @@ func NewExpenseManager() *ExpenseManager {
 	}
 }
 
-func (em *ExpenseManager) AddExpense(category string, amount float64, description string) {
-	if amount <= 0 {
-		fmt.Println("Error: Amount must be positive")
+func (em *ExpenseManager) AddExpense(amountStr, category, description string) {
+	amount, err := strconv.ParseFloat(amountStr, 64)
+	if err != nil {
+		fmt.Printf("Error: Invalid amount '%s'\n", amountStr)
 		return
 	}
 
-	expense := NewExpense(category, amount, description)
+	expense := NewExpense(amount, category, description)
 	expense.ID = em.nextID
 	em.nextID++
 	em.expenses = append(em.expenses, expense)
 	
-	fmt.Printf("Added expense: $%.2f for %s (%s)\n", amount, description, category)
+	fmt.Printf("✓ Added expense: $%.2f for %s (%s)\n", amount, category, description)
 }
 
-func (em *ExpenseManager) GenerateReport(categoryFilter string) {
+func (em *ExpenseManager) GenerateSummaryReport() {
 	if len(em.expenses) == 0 {
 		fmt.Println("No expenses recorded yet.")
 		return
 	}
 
-	fmt.Println("\n=== EXPENSE REPORT ===")
-	if categoryFilter != "" {
-		fmt.Printf("Category: %s\n", categoryFilter)
-	}
-	fmt.Println("ID | Date       | Category | Amount  | Description")
-	fmt.Println("---|------------|----------|---------|------------")
-
-	total := 0.0
-	count := 0
+	categoryTotals := make(map[string]float64)
+	totalSpent := 0.0
 
 	for _, expense := range em.expenses {
-		if categoryFilter == "" || expense.Category == categoryFilter {
-			dateStr := expense.Date.Format("2006-01-02")
-			fmt.Printf("%2d | %s | %-8s | $%6.2f | %s\n", 
-				expense.ID, dateStr, expense.Category, expense.Amount, expense.Description)
-			total += expense.Amount
-			count++
-		}
+		categoryTotals[expense.Category] += expense.Amount
+		totalSpent += expense.Amount
 	}
 
-	fmt.Printf("\nTotal: $%.2f (%d expenses)\n", total, count)
+	fmt.Println("\n=== EXPENSE SUMMARY REPORT ===")
+	fmt.Printf("Total expenses: $%.2f\n", totalSpent)
+	fmt.Printf("Number of transactions: %d\n", len(em.expenses))
+	fmt.Println("\nSpending by category:")
+	
+	for category, total := range categoryTotals {
+		percentage := (total / totalSpent) * 100
+		fmt.Printf("  %s: $%.2f (%.1f%%)\n", category, total, percentage)
+	}
+}
+
+func (em *ExpenseManager) GenerateDetailedReport() {
+	if len(em.expenses) == 0 {
+		fmt.Println("No expenses recorded yet.")
+		return
+	}
+
+	fmt.Println("\n=== DETAILED EXPENSE REPORT ===")
+	total := 0.0
+	
+	for _, expense := range em.expenses {
+		fmt.Printf("#%d: $%.2f | %s | %s | %s\n", 
+			expense.ID,
+			expense.Amount,
+			expense.Category,
+			expense.Description,
+			expense.Date.Format("2006-01-02 15:04"))
+		total += expense.Amount
+	}
+	
+	fmt.Printf("\nTotal: $%.2f\n", total)
 }
 
 func (em *ExpenseManager) ShowSummary() {
@@ -66,56 +86,33 @@ func (em *ExpenseManager) ShowSummary() {
 		return
 	}
 
-	fmt.Println("\n=== SPENDING SUMMARY ===")
+	total := 0.0
+	categories := make(map[string]int)
 	
-	// Calculate category totals
-	categoryTotals := make(map[string]float64)
-	overallTotal := 0.0
+	for _, expense := range em.expenses {
+		total += expense.Amount
+		categories[expense.Category]++
+	}
 
+	fmt.Println("\n=== QUICK SUMMARY ===")
+	fmt.Printf("Total spent: $%.2f\n", total)
+	fmt.Printf("Transactions: %d\n", len(em.expenses))
+	fmt.Printf("Categories: %d\n", len(categories))
+	
+	// Show most expensive category
+	maxCategory := ""
+	maxAmount := 0.0
+	categoryTotals := make(map[string]float64)
+	
 	for _, expense := range em.expenses {
 		categoryTotals[expense.Category] += expense.Amount
-		overallTotal += expense.Amount
-	}
-
-	// Sort categories by amount (descending)
-	type CategoryTotal struct {
-		Category string
-		Amount   float64
-		Percent  float64
-	}
-	
-	var sortedCategories []CategoryTotal
-	for category, amount := range categoryTotals {
-		percent := (amount / overallTotal) * 100
-		sortedCategories = append(sortedCategories, CategoryTotal{
-			Category: category,
-			Amount:   amount,
-			Percent:  percent,
-		})
-	}
-
-	sort.Slice(sortedCategories, func(i, j int) bool {
-		return sortedCategories[i].Amount > sortedCategories[j].Amount
-	})
-
-	fmt.Println("Category    | Amount    | % of Total")
-	fmt.Println("------------|-----------|------------")
-	for _, ct := range sortedCategories {
-		fmt.Printf("%-11s | $%7.2f | %6.1f%%\n", 
-			ct.Category, ct.Amount, ct.Percent)
-	}
-	
-	fmt.Printf("\nOverall Total: $%.2f (%d expenses)\n", overallTotal, len(em.expenses))
-	
-	// Show largest expense
-	if len(em.expenses) > 0 {
-		largest := em.expenses[0]
-		for _, expense := range em.expenses {
-			if expense.Amount > largest.Amount {
-				largest = expense
-			}
+		if categoryTotals[expense.Category] > maxAmount {
+			maxAmount = categoryTotals[expense.Category]
+			maxCategory = expense.Category
 		}
-		fmt.Printf("Largest expense: $%.2f for %s (%s)\n", 
-			largest.Amount, largest.Description, largest.Category)
+	}
+	
+	if maxCategory != "" {
+		fmt.Printf("Highest spending category: %s ($%.2f)\n", maxCategory, maxAmount)
 	}
 }
